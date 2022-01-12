@@ -64,6 +64,7 @@ $ git clone https://github.com/grafana/cortex-jsonnet
 $ cd cortex-jsonnet
 $ make build-mixin
 ```
+NOTE:  Modified the build-mixin Makefile entry locally prior to running to /Users/<user id>/go/bin/mixtool so the Makefile could find the mixtool executable.
 
 This will leave all the alerts and dashboards in cortex-mixin/cortex-mixin.zip (or cortex-mixin/out).
 

@@ -41,7 +41,7 @@ build-mixin:
 	@cd cortex-mixin && \
 	rm -rf out && mkdir out && \
 	jb install && \
-	/Users/c003261/go/bin/mixtool generate all --output-alerts out/alerts.yaml --output-rules out/rules.yaml --directory out/dashboards mixin.libsonnet && \
+	mixtool generate all --output-alerts out/alerts.yaml --output-rules out/rules.yaml --directory out/dashboards mixin.libsonnet && \
 	zip -q -r cortex-mixin.zip out
 
 test-readme:
