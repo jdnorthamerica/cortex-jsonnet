@@ -68,7 +68,7 @@ local utils = import 'mixin-utils/utils.libsonnet';
   jobMatcher(job)::
     if $._config.singleBinary
     then 'job=~"$job"'
-    else 'cluster=~"$cluster", job=~"($namespace)/%s"' % job,
+    else 'cluster=~"$cluster", job=~"cortex-%s"' % job,
 
   namespaceMatcher()::
     if $._config.singleBinary
@@ -78,7 +78,7 @@ local utils = import 'mixin-utils/utils.libsonnet';
   jobSelector(job)::
     if $._config.singleBinary
     then [utils.selector.noop('cluster'), utils.selector.re('job', '$job')]
-    else [utils.selector.re('cluster', '$cluster'), utils.selector.re('job', '($namespace)/%s' % job)],
+    else [utils.selector.re('cluster', '$cluster'), utils.selector.re('job', 'cortex-%s' % job)],
 
   queryPanel(queries, legends, legendLink=null)::
     super.queryPanel(queries, legends, legendLink) + {
@@ -145,8 +145,8 @@ local utils = import 'mixin-utils/utils.libsonnet';
   containerCPUUsagePanel(title, containerName)::
     $.panel(title) +
     $.queryPanel([
-      'sum by(%s) (rate(container_cpu_usage_seconds_total{%s,container=~"%s"}[$__rate_interval]))' % [$._config.per_instance_label, $.namespaceMatcher(), containerName],
-      'min(container_spec_cpu_quota{%s,container=~"%s"} / container_spec_cpu_period{%s,container=~"%s"})' % [$.namespaceMatcher(), containerName, $.namespaceMatcher(), containerName],
+      'sum by(%s) (rate(container_cpu_usage_seconds_total{%s,name=~"k8s_cortex_cortex-%s.*"}[$__rate_interval]))' % [$._config.per_instance_label, $.namespaceMatcher(), containerName],
+      'min(container_spec_cpu_quota{%s,name=~"k8s_cortex_cortex-%s.*"} / container_spec_cpu_period{%s,name=~"k8s_cortex_cortex-%s.*"})' % [$.namespaceMatcher(), containerName, $.namespaceMatcher(), containerName],
     ], ['{{%s}}' % $._config.per_instance_label, 'limit']) +
     {
       seriesOverrides: [
@@ -164,8 +164,8 @@ local utils = import 'mixin-utils/utils.libsonnet';
     $.queryPanel([
       // We use "max" instead of "sum" otherwise during a rolling update of a statefulset we will end up
       // summing the memory of the old instance/pod (whose metric will be stale for 5m) to the new instance/pod.
-      'max by(%s) (container_memory_working_set_bytes{%s,container=~"%s"})' % [$._config.per_instance_label, $.namespaceMatcher(), containerName],
-      'min(container_spec_memory_limit_bytes{%s,container=~"%s"} > 0)' % [$.namespaceMatcher(), containerName],
+      'max by(%s) (container_memory_working_set_bytes{%s,name=~"k8s_cortex_cortex-%s.*"})' % [$._config.per_instance_label, $.namespaceMatcher(), containerName],
+      'min(container_spec_memory_limit_bytes{%s,name=~"k8s_cortex_cortex-%s.*"} > 0)' % [$.namespaceMatcher(), containerName],
     ], ['{{%s}}' % $._config.per_instance_label, 'limit']) +
     {
       seriesOverrides: [
@@ -186,7 +186,7 @@ local utils = import 'mixin-utils/utils.libsonnet';
         namespace: $.namespaceMatcher(),
         metric: metric,
         instance: $._config.per_instance_label,
-        instanceName: instanceName,
+        instanceName: "cortex-" + instanceName,
       }, '{{%s}}' % $._config.per_instance_label
     ) +
     $.stack +
@@ -262,8 +262,8 @@ local utils = import 'mixin-utils/utils.libsonnet';
 
   containerLabelMatcher(containerName)::
     if containerName == 'ingester'
-    then 'label_name=~"ingester.*"'
-    else 'label_name="%s"' % containerName,
+    then 'label_app_kubernetes_io_component=~"ingester.*"'
+    else 'label_app_kubernetes_io_component="%s"' % containerName,
 
   goHeapInUsePanel(title, jobName)::
     $.panel(title) +
@@ -480,6 +480,9 @@ local utils = import 'mixin-utils/utils.libsonnet';
             container_fs_writes_bytes_total{
               %s,
               container="%s",
+              //Below attempt did not work
+              //container="cortex",
+              //name=~".*%s.*",
               device!~".*sda.*"
             }
           ),
