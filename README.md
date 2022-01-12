@@ -55,15 +55,16 @@ To generate the YAMLs for deploying Cortex:
 
 # Monitoring for Cortex
 
-To generate the Grafana dashboards and Prometheus alerts for Cortex:
+To generate the Grafana dashboards and Prometheus alerts for Cortex (using Go version 1.17.5):
 
 ```console
-$ GO111MODULE=on go get github.com/monitoring-mixins/mixtool/cmd/mixtool
-$ GO111MODULE=on go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+$ go install github.com/monitoring-mixins/mixtool/cmd/mixtool@master
+$ go install -a github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
 $ git clone https://github.com/grafana/cortex-jsonnet
 $ cd cortex-jsonnet
 $ make build-mixin
 ```
+NOTE:  Modified the build-mixin Makefile entry locally prior to running to /Users/<user id>/go/bin/mixtool so the Makefile could find the mixtool executable.
 
 This will leave all the alerts and dashboards in cortex-mixin/cortex-mixin.zip (or cortex-mixin/out).
 
